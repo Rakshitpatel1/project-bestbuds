@@ -2,165 +2,495 @@
 import Layout from '../../layouts/Layout.astro';
 import products from '../../data/products.json';
 
-const categories = [...new Set(products.map(p => p.category))];
+const brands = [...new Set(products.map(p => p.brand))].sort();
+const categories = [...new Set(products.map(p => p.category))].sort();
+
+const brandLogos = {
+  "boAt": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/BoAt_Lifestyle_logo.png/200px-BoAt_Lifestyle_logo.png",
+  "Noise": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Noise_brand_logo.png/200px-Noise_brand_logo.png",
+  "Realme": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Realme_logo.png/200px-Realme_logo.png",
+  "Sony": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Sony_logo.svg/200px-Sony_logo.svg.png",
+  "JBL": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/JBL_logo.svg/200px-JBL_logo.svg.png",
+  "Samsung": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Samsung_Logo.svg/200px-Samsung_Logo.svg.png",
+  "Apple": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/100px-Apple_logo_black.svg.png",
+  "Sennheiser": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sennheiser-Logo.svg/200px-Sennheiser-Logo.svg.png",
+};
+
+const brandColors = {
+  "boAt": "#e63946",
+  "Noise": "#2196F3",
+  "Realme": "#FFD700",
+  "Sony": "#000000",
+  "JBL": "#F97316",
+  "Samsung": "#1428A0",
+  "Apple": "#555555",
+  "Sennheiser": "#000000",
+};
 ---
 
-<Layout title="All Products" description="Browse all earphones, earbuds and headphones reviewed by BestBuds India.">
+<Layout title="All Products" description="Browse all earphones, earbuds and headphones by brand — boAt, Noise, Realme, Sony, JBL and more.">
 
   <section class="page-header">
     <div class="container">
       <h1>All Products</h1>
-      <p>Honest specs and reviews for every product we've tested.</p>
+      <p>Browse by brand or filter by category.</p>
     </div>
   </section>
 
-  <section class="products-section">
-    <div class="container">
+  <div class="container">
 
-      <div class="filters">
+    <!-- View toggle -->
+    <div class="view-bar">
+      <div class="view-tabs">
+        <button class="view-tab active" id="tab-brand" onclick="switchView('brand')">
+          By Brand
+        </button>
+        <button class="view-tab" id="tab-all" onclick="switchView('all')">
+          All Products
+        </button>
+      </div>
+      <div class="filters" id="categoryFilters" style="display:none">
         <button class="filter-btn active" data-filter="all">All</button>
         {categories.map(cat => (
           <button class="filter-btn" data-filter={cat}>{cat}</button>
         ))}
       </div>
+    </div>
 
-      <div class="product-grid" id="productGrid">
+    <!-- Brand view -->
+    <div id="brandView">
+
+      <div class="brand-grid" id="brandGrid">
+        {brands.map((brand) => {
+          const brandProducts = products.filter(p => p.brand === brand);
+          const cats = [...new Set(brandProducts.map(p => p.category))];
+          const color = brandColors[brand] || "#6C47FF";
+          const logo = brandLogos[brand] || "";
+          return (
+            <button
+              class="brand-card"
+              data-brand={brand}
+              onclick={`window.selectBrand('${brand}')`}
+              style={`--bc: ${color}`}
+            >
+              <div class="bc-bg"></div>
+              <div class="bc-pattern"></div>
+              <div class="bc-shine"></div>
+              <span class="bc-badge">{brandProducts.length} products</span>
+              {logo && (
+                <img
+                  class="bc-img"
+                  src={logo}
+                  alt={brand}
+                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+                />
+              )}
+              <span class="bc-initials" style={logo ? "display:none" : ""}>
+                {brand.slice(0,2).toUpperCase()}
+              </span>
+              <span class="bc-name">{brand}</span>
+              <span class="bc-count">{cats.join(' · ')}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <!-- Products for selected brand -->
+      <div id="brandProducts" style="display:none">
+        <div class="brand-products-header">
+          <button class="back-btn" onclick="goBack()">← All Brands</button>
+          <div>
+            <h2 id="brandTitle"></h2>
+            <span id="brandSubtitle" class="brand-subtitle"></span>
+          </div>
+          <div class="brand-cat-filters" id="brandCatFilters"></div>
+        </div>
+        <div class="product-grid" id="brandProductGrid"></div>
+      </div>
+
+    </div>
+
+    <!-- All products view -->
+    <div id="allView" style="display:none">
+      <div class="product-grid" id="allProductGrid">
         {products.map(product => (
-          <a href={`/products/${product.id}`} class="product-card" data-category={product.category}>
+          <a href={`/products/${product.id}`} class="product-card" data-category={product.category} data-brand={product.brand}>
             <div class="card-image">
-              <img src="/images/placeholder.svg" alt={product.name} />
+              <img src={product.image} alt={product.name} onerror="this.onerror=null;this.src='/images/placeholder.svg'" />
             </div>
             <div class="card-body">
-              <span class="category">{product.category}</span>
+              <div class="card-top">
+                <span class="category">{product.category}</span>
+                <span class="brand-tag">{product.brand}</span>
+              </div>
               <h3>{product.name}</h3>
               <div class="card-meta">
-                <span class="price">₹{product.price.toLocaleString('en-IN')}</span>
+                <span class="price">~₹{product.price.toLocaleString('en-IN')}</span>
                 <span class="rating">&#9733; {product.rating}</span>
               </div>
-              <p class="verdict">{product.verdict.slice(0, 80)}...</p>
+              <p class="verdict">{product.verdict.slice(0, 75)}...</p>
               <span class="view-btn">View Details →</span>
             </div>
           </a>
         ))}
       </div>
-
     </div>
-  </section>
+
+  </div>
 
 </Layout>
 
-<style>
-  .page-header {
-    padding: 3rem 0 2rem;
-    border-bottom: 1px solid var(--border);
-  }
+<style is:global>
+  .page-header { padding: 3rem 0 2rem; border-bottom: 1px solid var(--border); }
   .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
   .page-header p { color: var(--text-muted); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
 
-  .products-section { padding: 2.5rem 0; }
-
-  .filters {
+  .view-bar {
     display: flex;
-    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 0;
     flex-wrap: wrap;
+    gap: 1rem;
+    border-bottom: 1px solid var(--border);
     margin-bottom: 2rem;
   }
 
+  .view-tabs { display: flex; gap: 4px; background: #f3f4f6; padding: 4px; border-radius: 10px; }
+
+  .view-tab {
+    padding: 0.4rem 1.25rem;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .view-tab.active { background: #fff; color: #1a1a2e; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  .filters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
   .filter-btn {
-    padding: 0.4rem 1rem;
+    padding: 0.35rem 0.9rem;
     border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text-muted);
-    font-size: 0.85rem;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #6b7280;
+    font-size: 0.82rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
     font-family: inherit;
   }
 
-  .filter-btn:hover, .filter-btn.active {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-  }
+  .filter-btn:hover, .filter-btn.active { background: #6C47FF; color: white; border-color: #6C47FF; }
 
-  .product-grid {
+  /* ── Brand Cards ── */
+  .brand-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 2rem;
   }
 
-  .product-card {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+  .brand-card {
+    position: relative;
+    border-radius: 14px;
     overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-    background: var(--bg);
+    cursor: pointer;
+    height: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 0 1.1rem;
+    border: none;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    font-family: inherit;
   }
 
-  .product-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(108,71,255,0.1);
+  .brand-card:hover {
+    transform: translateY(-7px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.18);
   }
 
-  .product-card.hidden { display: none; }
+  .bc-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(160deg, var(--bc), color-mix(in srgb, var(--bc) 70%, black));
+  }
 
-  .card-image {
-    height: 180px;
-    background: var(--bg-secondary);
+  .bc-pattern {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .bc-shine {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    background: linear-gradient(135deg, rgba(255,255,255,0.14) 0%, transparent 55%);
+    pointer-events: none;
+  }
+
+  .bc-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 5;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.28);
+    border-radius: 20px;
+    font-size: 10px;
+    color: #fff;
+    padding: 2px 7px;
+    font-family: inherit;
+  }
+
+  .bc-img {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    width: 80px;
+    height: 56px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25)) brightness(10);
+    transition: transform 0.3s ease;
+  }
+
+  .brand-card:hover .bc-img {
+    animation: bcfloat 2s ease-in-out infinite;
+  }
+
+  @keyframes bcfloat {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-6px); }
+  }
+
+  .bc-initials {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.22);
+    border: 1px solid rgba(255,255,255,0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .card-image img { max-height: 140px; max-width: 80%; object-fit: contain; }
-
-  .card-body { padding: 1.25rem; }
-
-  .category {
-    font-size: 0.7rem;
+    font-size: 20px;
     font-weight: 600;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    color: #fff;
+    font-family: inherit;
   }
 
-  .card-body h3 { font-size: 1rem; font-weight: 600; margin: 0.25rem 0 0.5rem; }
+  .bc-name {
+    position: relative;
+    z-index: 3;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    font-family: inherit;
+  }
 
-  .card-meta {
+  .bc-count {
+    position: relative;
+    z-index: 3;
+    font-size: 10px;
+    color: rgba(255,255,255,0.78);
+    margin-top: 2px;
+    font-family: inherit;
+  }
+
+  /* ── Brand products section ── */
+  .brand-products-header {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
   }
 
-  .price { font-size: 1.05rem; font-weight: 700; color: var(--accent); }
-  .rating { font-size: 0.85rem; color: #f59e0b; font-weight: 500; }
-  .verdict { font-size: 0.83rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; }
-
-  .view-btn {
+  .back-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    color: #6b7280;
     font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--accent);
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .back-btn:hover { border-color: #6C47FF; color: #6C47FF; }
+
+  #brandTitle { font-size: 1.4rem; font-weight: 700; margin: 0; color: #1a1a2e; }
+  .brand-subtitle { font-size: 0.85rem; color: #6b7280; }
+  .brand-cat-filters { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-left: auto; }
+
+  /* ── Product grid ── */
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 3rem;
+  }
+
+  .product-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    background: #fff;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .product-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(108,71,255,0.1); }
+  .product-card.hidden { display: none; }
+
+  .card-image {
+    height: 170px;
+    background: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .card-image img { max-height: 140px; max-width: 85%; object-fit: contain; }
+  .card-body { padding: 1rem 1.1rem; }
+  .card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; }
+
+  .category { font-size: 0.68rem; font-weight: 600; color: #6C47FF; text-transform: uppercase; letter-spacing: 0.04em; }
+  .brand-tag { font-size: 0.68rem; font-weight: 500; color: #6b7280; background: #f3f4f6; padding: 0.1rem 0.5rem; border-radius: 10px; }
+  .card-body h3 { font-size: 0.92rem; font-weight: 600; margin: 0.2rem 0 0.4rem; line-height: 1.3; color: #1a1a2e; }
+  .card-meta { display: flex; justify-content: space-between; margin-bottom: 0.4rem; }
+  .price { font-size: 1rem; font-weight: 700; color: #6C47FF; }
+  .rating { font-size: 0.82rem; color: #f59e0b; font-weight: 500; }
+  .verdict { font-size: 0.8rem; color: #6b7280; line-height: 1.5; margin-bottom: 0.75rem; }
+  .view-btn { font-size: 0.82rem; font-weight: 600; color: #6C47FF; }
+
+  @media (max-width: 600px) {
+    .brand-grid { grid-template-columns: repeat(2, 1fr); }
+    .brand-products-header { flex-direction: column; align-items: flex-start; }
+    .brand-cat-filters { margin-left: 0; }
+    .view-bar { flex-direction: column; align-items: flex-start; }
   }
 </style>
 
-<script>
-  const btns = document.querySelectorAll('.filter-btn');
-  const cards = document.querySelectorAll('.product-card');
+<script define:vars={{ products }}>
+  let currentBrand = null;
 
-  btns.forEach(btn => {
+  // Make functions global so onclick attributes can access them
+  window.switchView = function(view) {
+    document.getElementById('brandView').style.display = view === 'brand' ? 'block' : 'none';
+    document.getElementById('allView').style.display = view === 'all' ? 'block' : 'none';
+    document.getElementById('categoryFilters').style.display = view === 'all' ? 'flex' : 'none';
+    document.getElementById('tab-brand').classList.toggle('active', view === 'brand');
+    document.getElementById('tab-all').classList.toggle('active', view === 'all');
+    if (view === 'brand') window.goBack();
+  }
+
+  window.selectBrand = function(brand) {
+    currentBrand = brand;
+
+    document.querySelectorAll('.brand-card').forEach(c => {
+      c.classList.toggle('active', c.dataset.brand === brand);
+    });
+
+    const brandProds = products.filter(p => p.brand === brand);
+    const cats = [...new Set(brandProds.map(p => p.category))];
+
+    document.getElementById('brandTitle').textContent = brand;
+    document.getElementById('brandSubtitle').textContent = brandProds.length + ' products';
+
+    const filtersEl = document.getElementById('brandCatFilters');
+    filtersEl.innerHTML = `<button class="filter-btn active" onclick="window.filterBrandCat('all', this)">All</button>` +
+      cats.map(cat => `<button class="filter-btn" onclick="window.filterBrandCat('${cat}', this)">${cat}</button>`).join('');
+
+    window.renderBrandProducts(brandProds);
+
+    document.querySelector('.brand-grid').style.display = 'none';
+    document.getElementById('brandProducts').style.display = 'block';
+  }
+
+  window.renderBrandProducts = function(prods) {
+    const grid = document.getElementById('brandProductGrid');
+    grid.innerHTML = prods.map(p => `
+      <a href="/products/${p.id}" style="
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.2s, box-shadow 0.2s;
+        background: #ffffff;
+        display: block;
+        text-decoration: none;
+        color: inherit;
+      "
+      onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 8px 24px rgba(108,71,255,0.1)'"
+      onmouseout="this.style.transform='';this.style.boxShadow=''"
+      >
+        <div style="height:170px;background:#f9fafb;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+          <img src="${p.image}" alt="${p.name}"
+            onerror="this.onerror=null;this.src='/images/placeholder.svg'"
+            style="max-height:140px;max-width:85%;object-fit:contain;" />
+        </div>
+        <div style="padding:1rem 1.1rem;">
+          <span style="font-size:0.68rem;font-weight:600;color:#6C47FF;text-transform:uppercase;letter-spacing:0.04em;">${p.category}</span>
+          <h3 style="font-size:0.92rem;font-weight:600;margin:0.2rem 0 0.4rem;line-height:1.3;color:#1a1a2e;">${p.name}</h3>
+          <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem;">
+            <span style="font-size:1rem;font-weight:700;color:#6C47FF;">~₹${p.price.toLocaleString('en-IN')}</span>
+            <span style="font-size:0.82rem;color:#f59e0b;font-weight:500;">★ ${p.rating}</span>
+          </div>
+          <p style="font-size:0.8rem;color:#6b7280;line-height:1.5;margin-bottom:0.75rem;">${p.verdict.slice(0, 75)}...</p>
+          <span style="font-size:0.82rem;font-weight:600;color:#6C47FF;">View Details →</span>
+        </div>
+      </a>
+    `).join('');
+  }
+
+  window.filterBrandCat = function(cat, btn) {
+    document.querySelectorAll('#brandCatFilters .filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const brandProds = products.filter(p => p.brand === currentBrand);
+    const filtered = cat === 'all' ? brandProds : brandProds.filter(p => p.category === cat);
+    window.renderBrandProducts(filtered);
+  }
+
+  window.goBack = function() {
+    currentBrand = null;
+    document.querySelector('.brand-grid').style.display = 'grid';
+    document.getElementById('brandProducts').style.display = 'none';
+    document.querySelectorAll('.brand-card').forEach(c => c.classList.remove('active'));
+  }
+
+  // All products category filter
+  document.querySelectorAll('#categoryFilters .filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      btns.forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#categoryFilters .filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-
       const filter = btn.dataset.filter;
-      cards.forEach(card => {
-        if (filter === 'all' || card.dataset.category === filter) {
-          card.classList.remove('hidden');
-        } else {
-          card.classList.add('hidden');
-        }
+      document.querySelectorAll('#allProductGrid .product-card').forEach(card => {
+        card.classList.toggle('hidden', filter !== 'all' && card.dataset.category !== filter);
       });
     });
   });
