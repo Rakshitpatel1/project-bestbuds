@@ -15,22 +15,38 @@ import products from '../../data/products.json';
     <div class="picker-row">
       <div class="picker">
         <label>Product 1</label>
-        <select id="product1">
-          <option value="">-- Select a product --</option>
-          {products.map(p => (
-            <option value={p.id}>{p.name} — ₹{p.price.toLocaleString('en-IN')}</option>
-          ))}
-        </select>
+        <div class="custom-select" id="cs1">
+          <button class="cs-trigger" onclick="window.toggleDropdown(1)" id="trigger1">
+            <span id="trigger1-text">-- Select a product --</span>
+            <i class="ti ti-chevron-down" id="chevron1"></i>
+          </button>
+          <div class="cs-dropdown" id="dropdown1">
+            <div class="cs-search">
+              <i class="ti ti-search"></i>
+              <input type="text" placeholder="Search products..." oninput="window.filterList(1, this.value)" id="searchInput1" />
+            </div>
+            <div class="cs-list" id="list1"></div>
+          </div>
+        </div>
       </div>
+
       <div class="vs-badge">VS</div>
+
       <div class="picker">
         <label>Product 2</label>
-        <select id="product2">
-          <option value="">-- Select a product --</option>
-          {products.map(p => (
-            <option value={p.id}>{p.name} — ₹{p.price.toLocaleString('en-IN')}</option>
-          ))}
-        </select>
+        <div class="custom-select" id="cs2">
+          <button class="cs-trigger" onclick="window.toggleDropdown(2)" id="trigger2">
+            <span id="trigger2-text">-- Select a product --</span>
+            <i class="ti ti-chevron-down" id="chevron2"></i>
+          </button>
+          <div class="cs-dropdown" id="dropdown2">
+            <div class="cs-search">
+              <i class="ti ti-search"></i>
+              <input type="text" placeholder="Search products..." oninput="window.filterList(2, this.value)" id="searchInput2" />
+            </div>
+            <div class="cs-list" id="list2"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -54,34 +70,24 @@ import products from '../../data/products.json';
   .page-header { padding: 3rem 0 2rem; border-bottom: 1px solid var(--border); }
   .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
   .page-header p { color: var(--text-muted); }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
 
   .picker-row {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     gap: 1.5rem;
     padding: 2rem 0;
     flex-wrap: wrap;
   }
 
   .picker { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 0.5rem; }
-  .picker label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
-
-  .picker select {
-    padding: 0.75rem 1rem;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    font-size: 0.95rem;
-    font-family: inherit;
-    color: var(--text);
-    background: var(--bg);
-    cursor: pointer;
-  }
+  .picker label { font-size: 0.85rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
 
   .vs-badge {
     font-size: 1rem;
     font-weight: 800;
     color: white;
-    background: var(--accent);
+    background: #6C47FF;
     width: 44px;
     height: 44px;
     border-radius: 50%;
@@ -89,23 +95,128 @@ import products from '../../data/products.json';
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    margin-bottom: 2px;
+    margin-top: 1.8rem;
   }
 
-  .select-prompt {
-    text-align: center;
-    color: var(--text-muted);
-    padding: 4rem 0;
-    font-size: 1rem;
+  /* Custom select */
+  .custom-select { position: relative; width: 100%; }
+
+  .cs-trigger {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    font-size: 0.95rem;
+    font-family: inherit;
+    color: #1a1a2e;
+    background: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    text-align: left;
+    transition: border-color 0.2s;
   }
 
+  .cs-trigger:hover { border-color: #6C47FF; }
+  .cs-trigger.open { border-color: #6C47FF; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+
+  .cs-trigger .ti-chevron-down { font-size: 16px; color: #9ca3af; transition: transform 0.2s; flex-shrink: 0; }
+  .cs-trigger.open .ti-chevron-down { transform: rotate(180deg); }
+
+  .trigger-selected { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+  .trigger-selected img { width: 28px; height: 28px; object-fit: contain; border-radius: 4px; background: #f3f4f6; padding: 2px; flex-shrink: 0; }
+  .trigger-selected-name { font-size: 0.9rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .trigger-selected-price { font-size: 0.78rem; color: #6C47FF; font-weight: 600; white-space: nowrap; }
+
+  /* Dropdown */
+  .cs-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #6C47FF;
+    border-top: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    z-index: 200;
+    display: none;
+    box-shadow: 0 8px 24px rgba(108,71,255,0.12);
+  }
+
+  .cs-dropdown.open { display: block; }
+
+  /* Search inside dropdown */
+  .cs-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 1;
+  }
+
+  .cs-search .ti-search { font-size: 14px; color: #9ca3af; flex-shrink: 0; }
+
+  .cs-search input {
+    border: none;
+    outline: none;
+    font-size: 0.88rem;
+    font-family: inherit;
+    color: #1a1a2e;
+    width: 100%;
+    background: transparent;
+  }
+
+  .cs-search input::placeholder { color: #9ca3af; }
+
+  /* List items */
+  .cs-list { max-height: 240px; overflow-y: auto; }
+
+  .cs-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0.65rem 0.85rem;
+    cursor: pointer;
+    border-bottom: 1px solid #f9fafb;
+    transition: background 0.15s;
+  }
+
+  .cs-item:last-child { border-bottom: none; }
+  .cs-item:hover { background: #f5f3ff; }
+  .cs-item.selected { background: #f5f3ff; }
+
+  .cs-item img {
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+    border-radius: 6px;
+    background: #f3f4f6;
+    padding: 3px;
+    flex-shrink: 0;
+  }
+
+  .cs-item-info { flex: 1; min-width: 0; }
+  .cs-item-name { font-size: 0.85rem; font-weight: 500; color: #1a1a2e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cs-item-meta { font-size: 0.75rem; color: #9ca3af; margin-top: 1px; }
+  .cs-item-price { font-size: 0.78rem; font-weight: 600; color: #6C47FF; white-space: nowrap; }
+
+  .cs-no-results { padding: 1rem; text-align: center; font-size: 0.85rem; color: #9ca3af; }
+
+  /* Score banner */
   .score-banner {
     display: grid;
     grid-template-columns: 1fr 60px 1fr;
     gap: 1rem;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
     padding: 1.5rem 2rem;
     margin-bottom: 1.5rem;
     align-items: center;
@@ -113,12 +224,12 @@ import products from '../../data/products.json';
   }
 
   .score-block { display: flex; flex-direction: column; gap: 0.25rem; align-items: center; }
-  .score-name { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+  .score-name { font-size: 0.85rem; font-weight: 600; color: #6b7280; }
   .score-number { font-size: 3rem; font-weight: 800; line-height: 1; }
-  .score-label { font-size: 0.75rem; color: var(--text-muted); }
+  .score-label { font-size: 0.75rem; color: #6b7280; }
   .score-winner { color: #16a34a; }
   .score-loser { color: #9ca3af; }
-  .score-divider { font-size: 1.2rem; font-weight: 700; color: var(--text-muted); text-align: center; }
+  .score-divider { font-size: 1.2rem; font-weight: 700; color: #9ca3af; text-align: center; }
 
   .winner-badge {
     display: inline-block;
@@ -134,7 +245,7 @@ import products from '../../data/products.json';
   }
 
   .compare-grid {
-    border: 1px solid var(--border);
+    border: 1px solid #e5e7eb;
     border-radius: 12px;
     overflow: hidden;
     margin-bottom: 1.5rem;
@@ -151,213 +262,219 @@ import products from '../../data/products.json';
     width: 100%;
   }
 
-  .compare-header-row .h-name {
-    padding: 1rem;
-    text-align: center;
-  }
+  .compare-header-row .h-name { padding: 1rem; text-align: center; }
+  .compare-header-row .h-label { padding: 1rem 0.5rem; font-size: 0.8rem; opacity: 0.85; text-align: center; border-left: 1px solid rgba(255,255,255,0.2); border-right: 1px solid rgba(255,255,255,0.2); }
 
-  .compare-header-row .h-label {
-    padding: 1rem 0.5rem;
-    font-size: 0.8rem;
-    opacity: 0.85;
-    text-align: center;
-    border-left: 1px solid rgba(255,255,255,0.2);
-    border-right: 1px solid rgba(255,255,255,0.2);
-  }
-
-  .compare-row {
-    display: grid;
-    grid-template-columns: 1fr 160px 1fr;
-    border-bottom: 1px solid #e5e7eb;
-    width: 100%;
-  }
-
+  .compare-row { display: grid; grid-template-columns: 1fr 160px 1fr; border-bottom: 1px solid #e5e7eb; width: 100%; }
   .compare-row:last-child { border-bottom: none; }
 
-  .compare-row .val {
-    padding: 0.8rem 1rem;
-    background: #ffffff;
-    text-align: center;
-    font-size: 0.88rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-  }
+  .compare-row .val { padding: 0.8rem 1rem; background: #fff; text-align: center; font-size: 0.88rem; display: flex; align-items: center; justify-content: center; min-height: 44px; }
+  .compare-row .key { padding: 0.8rem 0.75rem; background: #f9fafb; font-weight: 600; font-size: 0.78rem; color: #6b7280; text-transform: capitalize; display: flex; align-items: center; justify-content: center; text-align: center; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; min-height: 44px; }
+  .compare-row .val.win { background: #f0fdf4; color: #15803d; font-weight: 700; }
+  .compare-row .val.lose { background: #fff; color: #9ca3af; }
 
-  .compare-row .key {
-    padding: 0.8rem 0.75rem;
-    background: #f9fafb;
-    font-weight: 600;
-    font-size: 0.78rem;
-    color: #6b7280;
-    text-transform: capitalize;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-left: 1px solid #e5e7eb;
-    border-right: 1px solid #e5e7eb;
-    min-height: 44px;
-  }
-
-  .compare-row .val.win {
-    background: #f0fdf4;
-    color: #15803d;
-    font-weight: 700;
-  }
-
-  .compare-row .val.lose {
-    background: #ffffff;
-    color: #9ca3af;
-  }
-
-  .verdict-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-bottom: 3rem;
-  }
-
-  .verdict-card {
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 1.25rem;
-  }
-
-  .verdict-card.winner-card {
-    border-color: #16a34a;
-    background: #f0fdf4;
-  }
-
-  .verdict-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .verdict-section { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 3rem; }
+  .verdict-card { border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.25rem; }
+  .verdict-card.winner-card { border-color: #16a34a; background: #f0fdf4; }
+  .verdict-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.5rem; color: #1a1a2e; }
   .verdict-card p { font-size: 0.85rem; color: #6b7280; line-height: 1.6; }
 
-  .buy-link {
-    display: inline-block;
-    margin-top: 0.75rem;
-    background: #ff9900;
-    color: white;
-    padding: 0.5rem 1.25rem;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    text-decoration: none;
-  }
+  .buy-link { display: inline-block; margin-top: 0.75rem; background: #ff9900; color: white; padding: 0.5rem 1.25rem; border-radius: 6px; font-size: 0.85rem; font-weight: 700; text-decoration: none; }
+
+  .select-prompt { text-align: center; color: #6b7280; padding: 4rem 0; font-size: 1rem; }
 
   @media (max-width: 640px) {
     .compare-header-row { grid-template-columns: 1fr 80px 1fr; }
     .compare-row { grid-template-columns: 1fr 80px 1fr; }
     .verdict-section { grid-template-columns: 1fr; }
     .score-number { font-size: 2rem; }
+    .picker-row { flex-direction: column; }
+    .vs-badge { margin: 0 auto; }
   }
 </style>
 
 <script define:vars={{ products }}>
-function score(p) {
-  let s = 0;
-  s += (p.rating / 5) * 30;
-  if (p.specs.noiseCancellation !== 'No') s += 15;
-  if (p.specs.waterResistance !== 'No') s += 10;
-  if (p.specs.mic === 'Yes') s += 5;
-  const bat = parseInt(p.specs.battery);
-  if (!isNaN(bat)) s += Math.min((bat / 50) * 20, 20);
-  const maxPrice = 30000;
-  s += Math.max(0, (1 - p.price / maxPrice) * 20);
-  return Math.round(s);
-}
+  let selected = { 1: null, 2: null };
 
-function betterVal(key, v1, v2) {
-  const higherBetter = ['battery', 'driver'];
-  const lowerBetter = ['chargingTime', 'weight'];
-  const n1 = parseFloat(v1);
-  const n2 = parseFloat(v2);
-  if (isNaN(n1) || isNaN(n2)) return null;
-  if (higherBetter.some(k => key.toLowerCase().includes(k))) {
-    if (n1 > n2) return 1;
-    if (n2 > n1) return 2;
+  function buildList(num, filter = '') {
+    const list = document.getElementById('list' + num);
+    const q = filter.toLowerCase().trim();
+    const filtered = q
+      ? products.filter(p =>
+          p.name.toLowerCase().includes(q) ||
+          p.brand.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q)
+        )
+      : products;
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="cs-no-results">No products found</div>';
+      return;
+    }
+
+    list.innerHTML = filtered.map(p => `
+      <div class="cs-item ${selected[num]?.id === p.id ? 'selected' : ''}"
+        onclick="window.selectItem(${num}, '${p.id}')">
+        <img src="${p.image}" alt="${p.name}"
+          onerror="this.onerror=null;this.src='/images/placeholder.svg'" />
+        <div class="cs-item-info">
+          <div class="cs-item-name">${p.name}</div>
+          <div class="cs-item-meta">${p.brand} · ${p.category}</div>
+        </div>
+        <span class="cs-item-price">~₹${p.price.toLocaleString('en-IN')}</span>
+      </div>
+    `).join('');
   }
-  if (lowerBetter.some(k => key.toLowerCase().includes(k))) {
-    if (n1 < n2) return 1;
-    if (n2 < n1) return 2;
+
+  window.toggleDropdown = function(num) {
+    const dropdown = document.getElementById('dropdown' + num);
+    const trigger = document.getElementById('trigger' + num);
+    const other = num === 1 ? 2 : 1;
+
+    // Close the other dropdown
+    document.getElementById('dropdown' + other).classList.remove('open');
+    document.getElementById('trigger' + other).classList.remove('open');
+
+    const isOpen = dropdown.classList.contains('open');
+    dropdown.classList.toggle('open', !isOpen);
+    trigger.classList.toggle('open', !isOpen);
+
+    if (!isOpen) {
+      buildList(num);
+      setTimeout(() => document.getElementById('searchInput' + num).focus(), 50);
+    }
   }
-  return null;
-}
 
-function buildComparison(p1, p2) {
-  const result = document.getElementById('compareResult');
-  const prompt = document.getElementById('selectPrompt');
-  if (!p1 || !p2) { result.style.display = 'none'; prompt.style.display = 'block'; return; }
+  window.filterList = function(num, value) {
+    buildList(num, value);
+  }
 
-  result.style.display = 'block';
-  prompt.style.display = 'none';
+  window.selectItem = function(num, id) {
+    const p = products.find(p => p.id === id);
+    if (!p) return;
 
-  const s1 = score(p1);
-  const s2 = score(p2);
+    selected[num] = p;
 
-  document.getElementById('scoreBanner').innerHTML = `
-    <div class="score-block">
-      <span class="score-name">${p1.name}</span>
-      <span class="score-number ${s1 >= s2 ? 'score-winner' : 'score-loser'}">${s1}</span>
-      <span class="score-label">/ 100</span>
-      ${s1 >= s2 ? '<span class="winner-badge">Winner</span>' : ''}
-    </div>
-    <div class="score-divider">vs</div>
-    <div class="score-block">
-      <span class="score-name">${p2.name}</span>
-      <span class="score-number ${s2 > s1 ? 'score-winner' : 'score-loser'}">${s2}</span>
-      <span class="score-label">/ 100</span>
-      ${s2 > s1 ? '<span class="winner-badge">Winner</span>' : ''}
-    </div>
-  `;
+    // Update trigger button to show selected product
+    const triggerText = document.getElementById('trigger' + num + '-text');
+    triggerText.outerHTML = `
+      <div class="trigger-selected" id="trigger${num}-text">
+        <img src="${p.image}" alt="${p.name}"
+          onerror="this.onerror=null;this.src='/images/placeholder.svg'" />
+        <div style="min-width:0;flex:1">
+          <div class="trigger-selected-name">${p.name}</div>
+          <div class="trigger-selected-price">~₹${p.price.toLocaleString('en-IN')}</div>
+        </div>
+      </div>
+    `;
 
-  const specKeys = Object.keys(p1.specs);
-  const allRows = [
-    { key: 'Price', v1: `₹${p1.price.toLocaleString('en-IN')}`, v2: `₹${p2.price.toLocaleString('en-IN')}`, better: p1.price <= p2.price ? 1 : 2 },
-    { key: 'Rating', v1: `${p1.rating} ★`, v2: `${p2.rating} ★`, better: p1.rating >= p2.rating ? 1 : 2 },
-    ...specKeys.map(k => {
-      const v1 = p1.specs[k]; const v2 = p2.specs[k];
-      return { key: k.replace(/([A-Z])/g, ' $1').trim(), v1, v2, better: betterVal(k, v1, v2) };
-    })
-  ];
+    // Close dropdown
+    document.getElementById('dropdown' + num).classList.remove('open');
+    document.getElementById('trigger' + num).classList.remove('open');
+    document.getElementById('searchInput' + num).value = '';
 
-  const headerRow = `
-    <div class="compare-header-row">
-      <div class="h-name">${p1.name}</div>
-      <div class="h-label">Spec</div>
-      <div class="h-name">${p2.name}</div>
-    </div>
-  `;
+    // Build comparison if both selected
+    if (selected[1] && selected[2]) {
+      buildComparison(selected[1], selected[2]);
+    }
+  }
 
-  const rows = allRows.map(r => `
-    <div class="compare-row">
-      <div class="val ${r.better === 1 ? 'win' : r.better === 2 ? 'lose' : ''}">${r.v1}</div>
-      <div class="key">${r.key}</div>
-      <div class="val ${r.better === 2 ? 'win' : r.better === 1 ? 'lose' : ''}">${r.v2}</div>
-    </div>
-  `).join('');
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.custom-select')) {
+      document.querySelectorAll('.cs-dropdown').forEach(d => d.classList.remove('open'));
+      document.querySelectorAll('.cs-trigger').forEach(t => t.classList.remove('open'));
+    }
+  });
 
-  document.getElementById('compareGrid').innerHTML = headerRow + rows;
+  function score(p) {
+    let s = 0;
+    s += (p.rating / 5) * 30;
+    if (p.specs.noiseCancellation !== 'No') s += 15;
+    if (p.specs.waterResistance !== 'No') s += 10;
+    if (p.specs.mic === 'Yes') s += 5;
+    const bat = parseInt(p.specs.battery);
+    if (!isNaN(bat)) s += Math.min((bat / 50) * 20, 20);
+    s += Math.max(0, (1 - p.price / 30000) * 20);
+    return Math.round(s);
+  }
 
-  document.getElementById('verdictSection').innerHTML = `
-    <div class="verdict-card ${s1 >= s2 ? 'winner-card' : ''}">
-      <h3>${s1 >= s2 ? '🏆 ' : ''}${p1.name}</h3>
-      <p>${p1.verdict}</p>
-      <a href="${p1.affiliateLink}" target="_blank" rel="nofollow noopener" class="buy-link">Buy on Amazon ↗</a>
-    </div>
-    <div class="verdict-card ${s2 > s1 ? 'winner-card' : ''}">
-      <h3>${s2 > s1 ? '🏆 ' : ''}${p2.name}</h3>
-      <p>${p2.verdict}</p>
-      <a href="${p2.affiliateLink}" target="_blank" rel="nofollow noopener" class="buy-link">Buy on Amazon ↗</a>
-    </div>
-  `;
-}
+  function betterVal(key, v1, v2) {
+    const higherBetter = ['battery', 'driver'];
+    const lowerBetter = ['chargingTime', 'weight'];
+    const n1 = parseFloat(v1);
+    const n2 = parseFloat(v2);
+    if (isNaN(n1) || isNaN(n2)) return null;
+    if (higherBetter.some(k => key.toLowerCase().includes(k))) {
+      if (n1 > n2) return 1;
+      if (n2 > n1) return 2;
+    }
+    if (lowerBetter.some(k => key.toLowerCase().includes(k))) {
+      if (n1 < n2) return 1;
+      if (n2 < n1) return 2;
+    }
+    return null;
+  }
 
-const sel1 = document.getElementById('product1');
-const sel2 = document.getElementById('product2');
+  function buildComparison(p1, p2) {
+    document.getElementById('compareResult').style.display = 'block';
+    document.getElementById('selectPrompt').style.display = 'none';
 
-function getProduct(id) { return products.find(p => p.id === id); }
+    const s1 = score(p1);
+    const s2 = score(p2);
 
-sel1.addEventListener('change', () => buildComparison(getProduct(sel1.value), getProduct(sel2.value)));
-sel2.addEventListener('change', () => buildComparison(getProduct(sel1.value), getProduct(sel2.value)));
+    document.getElementById('scoreBanner').innerHTML = `
+      <div class="score-block">
+        <span class="score-name">${p1.name}</span>
+        <span class="score-number ${s1 >= s2 ? 'score-winner' : 'score-loser'}">${s1}</span>
+        <span class="score-label">/ 100</span>
+        ${s1 >= s2 ? '<span class="winner-badge">Winner</span>' : ''}
+      </div>
+      <div class="score-divider">vs</div>
+      <div class="score-block">
+        <span class="score-name">${p2.name}</span>
+        <span class="score-number ${s2 > s1 ? 'score-winner' : 'score-loser'}">${s2}</span>
+        <span class="score-label">/ 100</span>
+        ${s2 > s1 ? '<span class="winner-badge">Winner</span>' : ''}
+      </div>
+    `;
+
+    const specKeys = Object.keys(p1.specs);
+    const allRows = [
+      { key: 'Price', v1: `₹${p1.price.toLocaleString('en-IN')}`, v2: `₹${p2.price.toLocaleString('en-IN')}`, better: p1.price <= p2.price ? 1 : 2 },
+      { key: 'Rating', v1: `${p1.rating} ★`, v2: `${p2.rating} ★`, better: p1.rating >= p2.rating ? 1 : 2 },
+      ...specKeys.map(k => {
+        const v1 = p1.specs[k]; const v2 = p2.specs[k];
+        return { key: k.replace(/([A-Z])/g, ' $1').trim(), v1, v2, better: betterVal(k, v1, v2) };
+      })
+    ];
+
+    document.getElementById('compareGrid').innerHTML = `
+      <div class="compare-header-row">
+        <div class="h-name">${p1.name}</div>
+        <div class="h-label">Spec</div>
+        <div class="h-name">${p2.name}</div>
+      </div>
+      ${allRows.map(r => `
+        <div class="compare-row">
+          <div class="val ${r.better === 1 ? 'win' : r.better === 2 ? 'lose' : ''}">${r.v1}</div>
+          <div class="key">${r.key}</div>
+          <div class="val ${r.better === 2 ? 'win' : r.better === 1 ? 'lose' : ''}">${r.v2}</div>
+        </div>
+      `).join('')}
+    `;
+
+    document.getElementById('verdictSection').innerHTML = `
+      <div class="verdict-card ${s1 >= s2 ? 'winner-card' : ''}">
+        <h3>${s1 >= s2 ? '🏆 ' : ''}${p1.name}</h3>
+        <p>${p1.verdict}</p>
+        <a href="${p1.affiliateLink}" target="_blank" rel="nofollow noopener" class="buy-link">Buy on Amazon ↗</a>
+      </div>
+      <div class="verdict-card ${s2 > s1 ? 'winner-card' : ''}">
+        <h3>${s2 > s1 ? '🏆 ' : ''}${p2.name}</h3>
+        <p>${p2.verdict}</p>
+        <a href="${p2.affiliateLink}" target="_blank" rel="nofollow noopener" class="buy-link">Buy on Amazon ↗</a>
+      </div>
+    `;
+  }
 </script>

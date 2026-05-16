@@ -39,23 +39,36 @@ const brandColors = {
 
   <div class="container">
 
-    <!-- View toggle -->
-    <div class="view-bar">
-      <div class="view-tabs">
-        <button class="view-tab active" id="tab-brand" onclick="switchView('brand')">
-          By Brand
-        </button>
-        <button class="view-tab" id="tab-all" onclick="switchView('all')">
-          All Products
-        </button>
-      </div>
-      <div class="filters" id="categoryFilters" style="display:none">
-        <button class="filter-btn active" data-filter="all">All</button>
-        {categories.map(cat => (
-          <button class="filter-btn" data-filter={cat}>{cat}</button>
-        ))}
-      </div>
+  <div class="view-bar">
+    <div class="view-tabs">
+      <button class="view-tab active" id="tab-brand" onclick="window.switchView('brand')">
+        By Brand
+      </button>
+      <button class="view-tab" id="tab-all" onclick="window.switchView('all')">
+        All Products
+      </button>
     </div>
+
+    <div class="search-wrap">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <input
+        type="text"
+        id="productSearch"
+        placeholder="Search products..."
+        oninput="window.handleSearch(this.value)"
+      />
+      <button class="clear-btn" id="clearBtn" onclick="window.clearSearch()" style="display:none">
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+    </div>
+
+  <div class="filters" id="categoryFilters" style="display:none">
+    <button class="filter-btn active" data-filter="all">All</button>
+    {categories.map(cat => (
+      <button class="filter-btn" data-filter={cat}>{cat}</button>
+    ))}
+  </div>
+</div>
 
     <!-- Brand view -->
     <div id="brandView">
@@ -114,7 +127,7 @@ const brandColors = {
     <div id="allView" style="display:none">
       <div class="product-grid" id="allProductGrid">
         {products.map(product => (
-          <a href={`/products/${product.id}`} class="product-card" data-category={product.category} data-brand={product.brand}>
+          <a href={`/products/${product.id}`} class="product-card" data-category={product.category} data-brand={product.brand} data-name={product.name.toLowerCase()}>
             <div class="card-image">
               <img src={product.image} alt={product.name} onerror="this.onerror=null;this.src='/images/placeholder.svg'" />
             </div>
@@ -134,8 +147,11 @@ const brandColors = {
           </a>
         ))}
       </div>
+      <div id="noResults" class="no-results" style="display:none">
+        No products found. Try a different search term.
+      </div>
     </div>
-
+    </div>
   </div>
 
 </Layout>
@@ -145,6 +161,62 @@ const brandColors = {
   .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; }
   .page-header p { color: var(--text-muted); }
   .container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+
+  .search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+    max-width: 320px;
+  }
+
+  .search-wrap .ti-search {
+    position: absolute;
+    left: 12px;
+    color: #9ca3af;
+    font-size: 15px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    padding: 0.6rem 2.5rem 0.6rem 2.2rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-family: inherit;
+    color: #1a1a2e;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-wrap input:focus { border-color: #6C47FF; }
+
+  .clear-btn {
+    position: absolute;
+    right: 8px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9ca3af;
+    font-size: 14px;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+  }
+
+  .clear-btn:hover { color: #6C47FF; }
+
+  .no-results {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 3rem 0;
+    color: #9ca3af;
+    font-size: 0.95rem;
+  }
 
   .view-bar {
     display: flex;
@@ -399,6 +471,38 @@ const brandColors = {
 
 <script define:vars={{ products }}>
   let currentBrand = null;
+
+  window.handleSearch = function(query) {
+    const clearBtn = document.getElementById('clearBtn');
+    clearBtn.style.display = query ? 'flex' : 'none';
+
+    if (query.trim()) {
+      window.switchView('all');
+      document.getElementById('tab-all').classList.add('active');
+      document.getElementById('tab-brand').classList.remove('active');
+    }
+
+    const q = query.toLowerCase().trim();
+    const cards = document.querySelectorAll('#allProductGrid .product-card');
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      const name = card.dataset.name?.toLowerCase() || '';
+      const brand = card.dataset.brand?.toLowerCase() || '';
+      const category = card.dataset.category?.toLowerCase() || '';
+      const matches = !q || name.includes(q) || brand.includes(q) || category.includes(q);
+      card.classList.toggle('hidden', !matches);
+      if (matches) visibleCount++;
+    });
+
+    const noResults = document.getElementById('noResults');
+    if (noResults) noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+  }
+
+  window.clearSearch = function() {
+    document.getElementById('productSearch').value = '';
+    window.handleSearch('');
+  }
 
   // Make functions global so onclick attributes can access them
   window.switchView = function(view) {
