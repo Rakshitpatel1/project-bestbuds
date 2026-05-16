@@ -387,17 +387,60 @@ import products from '../../data/products.json';
     }
   });
 
-  function score(p) {
-    let s = 0;
-    s += (p.rating / 5) * 30;
-    if (p.specs.noiseCancellation !== 'No') s += 15;
-    if (p.specs.waterResistance !== 'No') s += 10;
-    if (p.specs.mic === 'Yes') s += 5;
-    const bat = parseInt(p.specs.battery);
-    if (!isNaN(bat)) s += Math.min((bat / 50) * 20, 20);
-    s += Math.max(0, (1 - p.price / 30000) * 20);
-    return Math.round(s);
+function score(p) {
+  let s = 0;
+
+  // Sound quality — driver size (0-15 pts)
+  const driver = parseFloat(p.specs.driver);
+  if (!isNaN(driver)) s += Math.min((driver / 15) * 15, 15);
+
+  // Rating — most important factor (0-25 pts)
+  s += (p.rating / 5) * 25;
+
+  // ANC (0-15 pts)
+  if (p.specs.noiseCancellation !== 'No') {
+    const dbMatch = p.specs.noiseCancellation.match(/(\d+)/);
+    const db = dbMatch ? parseInt(dbMatch[1]) : 20;
+    s += Math.min((db / 50) * 15, 15);
   }
+
+  // Battery (0-15 pts)
+  const bat = parseInt(p.specs.battery);
+  if (!isNaN(bat)) s += Math.min((bat / 60) * 15, 15);
+
+  // Water resistance (0-10 pts)
+  if (p.specs.waterResistance !== 'No') {
+    if (p.specs.waterResistance.includes('7')) s += 10;
+    else if (p.specs.waterResistance.includes('5')) s += 8;
+    else if (p.specs.waterResistance.includes('4')) s += 5;
+    else s += 4;
+  }
+
+  // Mic quality (0-5 pts)
+  if (p.specs.mic && p.specs.mic !== 'No') {
+    const mic = p.specs.mic.toLowerCase();
+    if (mic.includes('6-mic') || mic.includes('6 mic')) s += 5;
+    else if (mic.includes('4-mic') || mic.includes('quad') || mic.includes('4 mic')) s += 4;
+    else if (mic.includes('3-mic') || mic.includes('3 mic')) s += 3;
+    else if (mic.includes('enc') || mic.includes('enx') || mic.includes('cvc')) s += 2.5;
+    else s += 2;
+  }
+
+  // Connectivity bonus (0-5 pts)
+  const conn = p.specs.connectivity.toLowerCase();
+  if (conn.includes('ldac') || conn.includes('aptx adaptive')) s += 5;
+  else if (conn.includes('5.4')) s += 4;
+  else if (conn.includes('5.3')) s += 3;
+  else if (conn.includes('5.2')) s += 2;
+  else if (conn.includes('5.0')) s += 1;
+
+  // Value score (0-10 pts) — price relative to features
+  // Only a small factor now, not dominant
+  const maxPrice = 30000;
+  s += Math.max(0, (1 - p.price / maxPrice) * 10);
+
+  return Math.min(Math.round(s), 100);
+}
 
   function betterVal(key, v1, v2) {
     const higherBetter = ['battery', 'driver'];
