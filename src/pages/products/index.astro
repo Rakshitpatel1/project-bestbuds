@@ -6,14 +6,14 @@ const brands = [...new Set(products.map(p => p.brand))].sort();
 const categories = [...new Set(products.map(p => p.category))].sort();
 
 const brandLogos = {
-  "boAt": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/BoAt_Lifestyle_logo.png/200px-BoAt_Lifestyle_logo.png",
-  "Noise": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Noise_brand_logo.png/200px-Noise_brand_logo.png",
-  "Realme": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Realme_logo.png/200px-Realme_logo.png",
-  "Sony": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Sony_logo.svg/200px-Sony_logo.svg.png",
-  "JBL": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/JBL_logo.svg/200px-JBL_logo.svg.png",
-  "Samsung": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Samsung_Logo.svg/200px-Samsung_Logo.svg.png",
-  "Apple": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Apple_logo_grey.svg/195px-Apple_logo_grey.svg.png",
-  "Sennheiser": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Sennheiser-Logo.svg/200px-Sennheiser-Logo.svg.png",
+  "boAt":       "/images/logos/boat.png",
+  "Noise":      "/images/logos/noise.png",
+  "Realme":     "/images/logos/Realme.png",
+  "Sony":       "/images/logos/sony.png",
+  "JBL":        "/images/logos/jbl.png",
+  "Samsung":    "/images/logos/samsung.png",
+  "Apple":      "/images/logos/apple.png",
+  "Sennheiser": "/images/logos/sennheiser.png",
 };
 
 const brandColors = {
@@ -86,23 +86,19 @@ const brandColors = {
               onclick={`window.selectBrand('${brand}')`}
               style={`--bc: ${color}`}
             >
-              <div class="bc-bg"></div>
-              <div class="bc-pattern"></div>
-              <div class="bc-shine"></div>
-              <span class="bc-badge">{brandProducts.length} products</span>
-              {logo && (
-                <img
-                  class="bc-img"
-                  src={logo}
-                  alt={brand}
-                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
-                />
-              )}
-              <span class="bc-initials" style={logo ? "display:none" : ""}>
-                {brand.slice(0,2).toUpperCase()}
-              </span>
-              <span class="bc-name">{brand}</span>
-              <span class="bc-count">{cats.join(' · ')}</span>
+              <div class="bc-logo-area">
+                {logo
+                  ? <img class="bc-img" src={logo} alt={brand} onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+                  : null
+                }
+                <span class="bc-initials" style={logo ? "display:none" : "display:flex"}>
+                  {brand.slice(0,2).toUpperCase()}
+                </span>
+              </div>
+              <div class="bc-footer">
+                <span class="bc-name">{brand}</span>
+                <span class="bc-count">{brandProducts.length} products</span>
+              </div>
             </button>
           );
         })}
@@ -263,90 +259,121 @@ const brandColors = {
 
   .filter-btn:hover, .filter-btn.active { background: #6C47FF; color: white; border-color: #6C47FF; }
 
-  /* ── Brand Cards ── */
+/* ── Brand Cards ── */
   .brand-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
     margin-bottom: 2rem;
+    padding-top: 0.5rem;
   }
 
   .brand-card {
     position: relative;
-    border-radius: 14px;
+    border-radius: 16px;
     overflow: hidden;
     cursor: pointer;
-    height: 160px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
-    padding: 0 0 1.1rem;
-    border: none;
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    border: 1.5px solid #e5e7eb;
+    background: #fff;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
     font-family: inherit;
+    padding: 0;
   }
 
   .brand-card:hover {
-    transform: translateY(-7px);
-    box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+    border-color: var(--bc);
   }
 
-  .bc-bg {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background: linear-gradient(160deg, var(--bc), color-mix(in srgb, var(--bc) 70%, black));
+  .bc-logo-area {
+    width: 100%;
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9fafb;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
   }
 
-  .bc-pattern {
+  .bc-logo-area::after {
+    content: '';
     position: absolute;
-    inset: 0;
-    z-index: 1;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--bc);
+    transform: scaleX(0);
+    transition: transform 0.22s ease;
+    transform-origin: left;
   }
 
-  .bc-shine {
-    position: absolute;
-    inset: 0;
-    z-index: 4;
-    background: linear-gradient(135deg, rgba(255,255,255,0.14) 0%, transparent 55%);
-    pointer-events: none;
-  }
-
-  .bc-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 5;
-    background: rgba(255,255,255,0.18);
-    border: 1px solid rgba(255,255,255,0.28);
-    border-radius: 20px;
-    font-size: 10px;
-    color: #fff;
-    padding: 2px 7px;
-    font-family: inherit;
+  .brand-card:hover .bc-logo-area::after {
+    transform: scaleX(1);
   }
 
   .bc-img {
-    position: absolute;
-    top: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 2;
-    width: 80px;
-    height: 56px;
+    max-width: 100px;
+    max-height: 64px;
     object-fit: contain;
-    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25)) brightness(10);
     transition: transform 0.3s ease;
+    filter: none;
   }
 
   .brand-card:hover .bc-img {
-    animation: bcfloat 2s ease-in-out infinite;
+    transform: scale(1.08);
   }
 
+  .bc-initials {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--bc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+    font-family: inherit;
+    transition: transform 0.3s ease;
+  }
+
+  .brand-card:hover .bc-initials {
+    transform: scale(1.08);
+  }
+
+.bc-footer {
+  width: 100%;
+  padding: 0.75rem 0.5rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border-top: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.brand-card .bc-name {
+  color: #111827 !important;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.brand-card .bc-count {
+  color: #6b7280 !important;
+  font-size: 11px;
+}
+
   @keyframes bcfloat {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(-6px); }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
   }
 
   .bc-initials {
